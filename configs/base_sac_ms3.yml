@@ -1,0 +1,108 @@
+jax_env: False
+
+seed: 0
+algo: sac
+verbose: 1
+# Environment configuration
+env:
+  env_id: None
+  max_episode_steps: 50
+  num_envs: 16
+  env_type: "gym:gpu"
+  render_size: 64
+  num_frames: 3
+  num_points: 2048
+  env_kwargs:
+    obs_mode: "state"
+    control_mode: "pd_joint_delta_pos"
+    render_mode: "rgb_array"
+    reward_mode: "normalized_dense"
+eval_env:
+  num_envs: 2
+
+sac:
+  num_seed_steps: 5_000
+  seed_with_policy: False
+  replay_buffer_capacity: 1_000_000
+  batch_size: 128
+  steps_per_env: 4
+  grad_updates_per_step: 16
+  actor_update_freq: 1
+
+  num_qs: 2
+  num_min_qs: 2
+
+  discount: 0.95
+  tau: 0.005
+  backup_entropy: False
+
+  eval_freq: 50_000
+  eval_episodes: 4
+
+  log_freq: 1000
+  save_freq: 50_000
+
+  learnable_temp: True
+  initial_temperature: 1.0
+
+  share_ve: True # note that this will use actor_ve's optimizer
+  actor_update_shared_ve: False # if the actor can update shared visual encoder (not valid if share_ve=False)
+
+  save_ckpt: True
+
+  load_ckpt: False
+  load_params_only: True # Whether we load only the params and not continue training with checkpoint logger and other info.
+  load_ve_only: False
+  ckpt_path: null
+  
+network:
+  rgb_encoder:
+    type: "conv"
+    arch_cfg:
+      features: [32, 32, 32, 32]
+      strides: [2, 2, 2, 2]
+      kernels: [3, 3, 3, 3]
+      pixel_preprocess: True
+  pointcloud_encoder:
+    type: "pointnet_encoder"
+    arch_cfg:
+      features: [32, 128, 256]
+      use_stn: False
+      activation: "relu" # is it needed?
+      stn:
+        conv_channels: [32, 128, 256]
+        mlp_features: [256, 64] # 9 is omitted
+        activation: "relu"
+  actor:
+    type: "mlp"
+    arch_cfg:
+      features: [256, 256, 256]
+      output_activation: "relu"
+  critic:
+    type: "mlp"
+    arch_cfg:
+      features: [256, 256, 256]
+      output_activation: "relu"
+      use_layer_norm: True
+
+train:
+  actor_ve_lr: 3e-4
+  critic_ve_lr: 3e-4
+  actor_lr: 3e-4
+  critic_lr: 3e-4
+  steps: 1_000_000
+  dataset_path: None
+  shuffle_demos: True
+  num_demos: 1000
+
+  data_action_scale: null
+
+logger:
+  tensorboard: True
+  wandb: False
+  save_video_local: True
+
+  workspace: "exps"
+  project_name: "ManiSkill"
+  wandb_cfg:
+    group: "SAC"

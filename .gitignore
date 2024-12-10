@@ -1,0 +1,10 @@
+rlpd_jax
+wandb
+exps
+videos
+nautilus/*
+
+**/__pycache__
+
+# include
+!nautilus/*template.yml
